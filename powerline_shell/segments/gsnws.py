@@ -3,7 +3,10 @@ import os
 from ..utils import BasicSegment
 
 def get_gsnws_name():
+    new_gsnws_pat_match = re.match('^(?:prototype|dev|ref|master|maint)/(\w+)$', os.getenv('GSN_WS_NAME'))
     pat_match = re.match('^\w{7}__ndpgsn_5_0_(?:wb__ndpgsn_5_0_(\w+)|(\w+))$', os.getenv('GSN_WS_NAME'))
+    if new_gsnws_pat_match:
+        return new_gsnws_pat_match.group(1)
     if not pat_match:
         return ''
     if pat_match.group(1):
