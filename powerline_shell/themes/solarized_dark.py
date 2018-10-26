@@ -1,4 +1,4 @@
-from .default import DefaultColor
+from powerline_shell.themes.default import DefaultColor
 
 
 class Color(DefaultColor):
@@ -42,3 +42,6 @@ class Color(DefaultColor):
 
     GSNWS_BG = 4
     GSNWS_FG = 7
+    
+    TIME_FG = 15
+    TIME_BG = 10

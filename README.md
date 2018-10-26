@@ -1,15 +1,18 @@
 # A Powerline style prompt for your shell
 
-A [Powerline](https://github.com/Lokaltog/vim-powerline) like prompt for Bash,
-ZSH, Fish, and tcsh:
+A beautiful and useful prompt generator for Bash, ZSH, Fish, and tcsh:
 
-![MacVim+Solarized+Powerline+CtrlP](https://raw.github.com/banga/powerline-shell/master/bash-powerline-screenshot.png)
+![MacVim+Solarized+Powerline+CtrlP](https://raw.github.com/b-ryan/powerline-shell/master/bash-powerline-screenshot.png)
 
 - Shows some important details about the git/svn/hg/fossil branch (see below)
 - Changes color if the last command exited with a failure code
 - If you're too deep into a directory tree, shortens the displayed path with an ellipsis
 - Shows the current Python [virtualenv](http://www.virtualenv.org/) environment
 - It's easy to customize and extend. See below for details.
+
+The generated prompts are designed to resemble
+[powerline](https://github.com/powerline/powerline), but otherwise this project
+has no relation to powerline.
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
@@ -20,9 +23,11 @@ ZSH, Fish, and tcsh:
   - [Bash](#bash)
   - [ZSH](#zsh)
   - [Fish](#fish)
+  - [tcsh](#tcsh)
 - [Customization](#customization)
   - [Config File](#config-file)
   - [Adding, Removing and Re-arranging segments](#adding-removing-and-re-arranging-segments)
+  - [Generic Segments](#generic-segments)
   - [Segment Separator](#segment-separator)
   - [Themes](#themes)
   - [Segment Configuration](#segment-configuration)
@@ -48,7 +53,7 @@ following symbols:
 - `✎` -- a file has been modified (but not staged for commit, in git)
 - `✔` -- a file is staged for commit (git) or added for tracking
 - `✼` -- a file has conflicts
-- `❓` -- a file is untracked
+- `?` -- a file is untracked
 
 Each of these will have a number next to it if more than one file matches.
 
@@ -61,7 +66,7 @@ with an option `show_symbol` set to `true` (see
 
 This script uses ANSI color codes to display colors in a terminal. These are
 notoriously non-portable, so may not work for you out of the box, but try
-setting your $TERM to `xterm-256color`, because that works for me.
+setting your $TERM to `xterm-256color`.
 
 - Patch the font you use for your terminal: see
   [powerline-fonts](https://github.com/Lokaltog/powerline-fonts)
@@ -86,7 +91,7 @@ install for just your user, if you'd like. But you may need to fiddle with your
 - Or, install from the git repository:
 
 ```
-git clone https://github.com/banga/powerline-shell
+git clone https://github.com/b-ryan/powerline-shell
 cd powerline-shell
 python setup.py install
 ```
@@ -95,17 +100,22 @@ python setup.py install
 
 ### Bash
 
-Add the following to your `.bashrc` (or `.profile` on Mac):
+Add the following to your `.bashrc` file:
 
 ```
 function _update_ps1() {
-    PS1="$(powerline-shell $?)"
+    PS1=$(powerline-shell $?)
 }
 
-if [ "$TERM" != "linux" ]; then
+if [[ $TERM != linux && ! $PROMPT_COMMAND =~ _update_ps1 ]]; then
     PROMPT_COMMAND="_update_ps1; $PROMPT_COMMAND"
 fi
 ```
+
+**Note:** On macOS, you must add this to one of `.bash_profile`, `.bash_login`,
+or `.profile`. macOS will execute the files in the aforementioned order and
+will stop execution at the first file it finds. For more information on the
+order of precedence, see the section **INVOCATION** in `man bash`.
 
 ### ZSH
 
@@ -153,53 +163,74 @@ alias precmd 'set prompt="`powerline-shell --shell tcsh $?`"'
 ### Config File
 
 Powerline-shell is customizable through the use of a config file. This file is
-expected to be located at `~/.powerline-shell.json`. You can generate the
-default config at this location using:
+expected to be located at `~/.config/powerline-shell/config.json`. You can
+generate the default config at this location using:
 
 ```
-powerline-shell --generate-config > ~/.powerline-shell.json
+mkdir -p ~/.config/powerline-shell && \
+powerline-shell --generate-config > ~/.config/powerline-shell/config.json
 ```
 
-(You can see an example config file
-[here](https://github.com/b-ryan/dotfiles/blob/master/home/powerline-shell.json))
+(As an example, my config file is located here:
+[here](https://github.com/b-ryan/dotfiles/blob/master/home/config/powerline-shell/config.json))
 
 ### Adding, Removing and Re-arranging segments
 
 Once you have generated your config file, you can now start adding or removing
 "segments" - the building blocks of your shell. The list of segments available
-are:
+can be seen
+[here](https://github.com/b-ryan/powerline-shell/tree/master/powerline_shell/segments).
 
-- `aws_profile` - Show which AWS profile is in use. See the
-  [AWS](http://docs.aws.amazon.com/cli/latest/userguide/cli-multiple-profiles.html)
-  documentation.
-- `battery` - See percentage of battery charged and an icon when the battery is
-  charging.
-- `bzr` - Details about the current Bazaar repo.
-- `cwd` - Shows your current working directory. See [Segment
-  Configuration](#segment-configuration) for some options.
-- `exit_code` - When the previous command ends in a non-zero status, shows the
-  value of the exit status in red.
-- `fossil` - Details about the current Fossil repo.
-- `git` - Details about the current Git repo.
-- `hg` - Details about the current Mercurial repo.
-- `hostname` - Current machine's hostname.
-- `jobs` - Number of background jobs currently running.
-- `newline` - Inserts a newline into the prompt.
-- `node_version` - `node --version`
-- `npm_version` - `npm --version`
-- `php_version` - Version of php on the machine.
-- `rbenv` - `rbenv local`
-- `read_only` - Shows a lock icon if the current directory is read-only.
-- `root` - Shows a `#` if logged in as root, `$` otherwise.
-- `ruby_version` - `ruby --version`
-- `set_term_title` - If able, sets the title of your terminal to include some
-  useful info.
-- `ssh` - If logged into over SSH, shows a network icon.
-- `svn` - Details about the current SVN repo.
-- `time` - Shows the current time.
-- `uptime` - Uptime of the current machine.
-- `username` - Name of the logged-in user.
-- `virtual_env` - Shows the name of the current virtual env or conda env.
+You can also create custom segments. Start by copying an existing segment like
+[this](https://github.com/b-ryan/powerline-shell/blob/master/powerline_shell/segments/aws_profile.py).
+Make sure to change any relative imports to absolute imports. Ie. change things
+like:
+
+```python
+from ..utils import BasicSegment
+```
+
+to
+
+```python
+from powerline_shell.utils import BasicSegment
+```
+
+Then change the `add_to_powerline` function to do what you want. You can then
+use this segment in your configuration by putting the path to your segment in
+the segments section, like:
+
+```json
+"segments": [
+    "~/path/to/segment.py"
+]
+```
+
+### Generic Segments
+
+There are two special segments available. `stdout` accepts an arbitrary command
+and the output of the command will be put into your prompt. `env` takes an
+environment variable and the value of the variable will be set in your prompt.
+For example, your config could look like this:
+
+```
+{
+  "segments": [
+    "cwd",
+    "git",
+    {
+      "type": "stdout",
+      "command": ["echo", "hi"],
+      "fg_color": 22,
+      "bg_color": 161
+    },
+    {
+      "type": "env",
+      "var": "DOCKER_MACHINE_NAME",
+    },
+  ]
+}
+```
 
 ### Segment Separator
 
@@ -218,9 +249,20 @@ file. The available modes are:
 The `powerline_shell/themes` directory stores themes for your prompt, which are
 basically color values used by segments. The `default.py` defines a default
 theme which can be used standalone, and every other theme falls back to it if
-they miss colors for any segments. Create new themes by copying any other
-existing theme and changing the values. To use a theme, set the `theme`
-variable in `~/.powerline-shell.json` to the name of your theme.
+they miss colors for any segments.
+
+If you want to create a custom theme, start by copying one of the existing
+themes, like the
+[basic](https://github.com/b-ryan/powerline-shell/blob/master/powerline_shell/themes/basic.py).
+and update your `~/.config/powerline-shell/config.json`, setting the `"theme"`
+to the path of the file. For example your configuration might have:
+
+```
+  "theme": "~/mythemes/my-great-theme.py"
+```
+
+You can then modify the color codes to your liking. Theme colors are specified
+using [Xterm-256 color codes](https://jonasjacek.github.io/colors/).
 
 A script for testing color combinations is provided at `colortest.py`. Note
 that the colors you see may vary depending on your terminal. When designing a
@@ -231,7 +273,7 @@ settings.
 
 Some segments support additional configuration. The options for the segment are
 nested under the name of the segment itself. For example, all of the options
-for the `cwd` segment are set in `~/.powerline-shell.json` like:
+for the `cwd` segment are set in `~/.config/powerline-shell/config.json` like:
 
 ```
 {
@@ -273,6 +315,10 @@ The options for the `battery` segment are:
 - `always_show_percentage`: If true, show percentage when fully charged on AC.
 - `low_threshold`: Threshold percentage for low-battery indicator color.
 
+The options for the `time` segment are:
+
+- `format`: Format string as used by strftime function, e.g. `%H:%M`.
+
 ### Contributing new types of segments
 
 The `powerline_shell/segments` directory contains python scripts which are
@@ -296,6 +342,6 @@ requirements in `requirements-dev.txt`.
 
 ## Troubleshooting
 
-See the [FAQ](https://github.com/banga/powerline-shell/wiki/FAQ). If you
+See the [FAQ](https://github.com/b-ryan/powerline-shell/wiki/FAQ). If you
 continue to have issues, please open an
-[issue](https://github.com/banga/powerline-shell/issues/new).
+[issue](https://github.com/b-ryan/powerline-shell/issues/new).
